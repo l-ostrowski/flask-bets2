@@ -14,7 +14,7 @@ $ sudo apt install python3.8-venv
 <b>2. Clone repository from Github</b>  
 
 ```
-$ git clone https://github.com/l-ostrowski/flask-bets ~/projects/flask-bets2  
+$ git clone https://github.com/l-ostrowski/flask-bets2 ~/projects/flask-bets2  
 $ cd ~/projects/flask-bets2/  
 ```
 
