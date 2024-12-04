@@ -14,7 +14,7 @@ def init_app(app):
 
 def get_db():
     if not hasattr(g, 'sqlite_db'):
-        conn = sqlite3.connect(current_app.config["DB_FILE"])
+        conn = sqlite3.connect(current_app.config["DATA_FOLDER"] + current_app.config["DB_FILE"])
         conn.row_factory = sqlite3.Row
         g.sqlite_db = conn
     return g.sqlite_db

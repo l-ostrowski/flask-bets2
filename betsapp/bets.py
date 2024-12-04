@@ -1,6 +1,6 @@
 from flask import Flask
 from dotenv import load_dotenv
-
+import os 
 from betsapp import routes, database, config
 
 load_dotenv()
@@ -8,14 +8,21 @@ load_dotenv()
 def create_app():
     app = Flask(__name__)
     app.config.from_prefixed_env()
-    app.config.from_object("betsapp.config.DevelopmentConfig")
+    config_file = "betsapp.config." + app.config['CONFIG_FILE']
+    print("config file used: " + config_file)
+    
+
+    #app.config.from_object("betsapp.config.DevelopmentConfig")
+    app.config.from_object(config_file)
+    print("db file: " + app.config['DB_FILE'])
 
     database.init_app(app)
     # print(database.test(app))
 
     app.register_blueprint(routes.bp)
 
-    #config.AzureKV(app)
+    if app.config['AZURE_KEY_VAULT'] == 'True':
+        config.AzureKV(app)
     
     return app
 

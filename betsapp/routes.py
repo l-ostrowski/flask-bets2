@@ -274,7 +274,7 @@ def squad():
         # response_json = response.json()
 
         # Open and read the JSON file
-        with open('./data/team_squads.json', 'r') as file:
+        with open(current_app.config["DATA_FOLDER"]+'team_squads.json', 'r') as file:
             response_json = json.load(file)
 
         team = request.form['team']
