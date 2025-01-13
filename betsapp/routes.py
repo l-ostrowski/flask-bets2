@@ -23,8 +23,10 @@ def matches():
 
     if request.method == 'GET':
         db = get_db()
-        cur = db.execute(sqls()["sql_select"], [login.id])
-        matches=cur.fetchall()
+        #cur = db.execute(sqls()["sql_select"], [login.id])
+        #matches=cur.fetchall()
+        db.execute(sqls()["sql_select"], [login.id])
+        matches=db.fetchall()
         return render_template('bet_matches.html', matches=matches, active_matches='active', login=login )
     else:
 
@@ -41,18 +43,23 @@ def matches():
         elif datetime.strptime(match_dt_check,'%d-%m-%Y %H:%M') < datetime.now() + timedelta(hours=current_app.config["TIME_ZONE_OFFSET"]):
             flash('Too late! The match has already started', 'error')
         else:
-            db = get_db()
-
+            
             for key, value in request.form.items():
                 match_id=key.split('_')[0]
                 team=key.split('_')[1]
                 if team=='team1':
-                    sql_command = 'update user_matches set team1_res=?, insert_date=? where match_id=? and user_id=?'
+                    db = get_db()
+                    # sql_command = 'update user_matches set team1_res=?, insert_date=? where match_id=? and user_id=?'
+                    sql_command = "update user_matches set team1_res=cast(nullif(%s,'') as int), insert_date=%s where match_id=%s and user_id=%s"
                     db.execute(sql_command, [value, datetime.now(), match_id, login.id])
+                    db = get_db2()
                     db.commit()
                 elif team=='team2':
-                    sql_command = 'update user_matches set team2_res=?, insert_date=? where match_id=? and user_id=?'
+                    db = get_db()
+                    #sql_command = 'update user_matches set team2_res=?, insert_date=? where match_id=? and user_id=?'
+                    sql_command = "update user_matches set team2_res=cast(nullif(%s,'') as int), insert_date=%s where match_id=%s and user_id=%s"
                     db.execute(sql_command, [value, datetime.now(), match_id, login.id])
+                    db = get_db2()
                     db.commit()
     
             flash('Your bets have been updated', 'success')
@@ -69,12 +76,17 @@ def edit():
     
     db = get_db()
     
-    cur = db.execute(sqls()["sql_match_date"])
-    match_dt = cur.fetchone()
+    #cur = db.execute(sqls()["sql_match_date"])
+    #match_dt = cur.fetchone()
+    db.execute(sqls()["sql_match_date"])
+    match_dt = db.fetchone()
+
     session['match_dt_check'] = match_dt['match_dt_check']
 
-    cur = db.execute(sqls()["sql_select"],  [login.id])
-    matches=cur.fetchall()
+    #cur = db.execute(sqls()["sql_select"],  [login.id])
+    #matches=cur.fetchall()
+    db.execute(sqls()["sql_select"],  [login.id])
+    matches = db.fetchall()
     return render_template('bet_edit_matches.html', matches=matches, active_matches='active', login=login )
 
 @bp.route('/ranking')
@@ -86,8 +98,10 @@ def ranking():
         return redirect(url_for('routes.login')) 
     
     db = get_db()
-    cur = db.execute(sqls()["sql_select_ranking"])
-    ranking=cur.fetchall()
+    #cur = db.execute(sqls()["sql_select_ranking"])
+    #ranking=cur.fetchall()
+    db.execute(sqls()["sql_select_ranking"])
+    ranking=db.fetchall()
     return render_template('bet_ranking.html', ranking=ranking, active_ranking='active', login=login )
 
 @bp.route('/results')
@@ -99,8 +113,10 @@ def results():
         return redirect(url_for('routes.login')) 
     
     db = get_db()
-    cur = db.execute(sqls()["sql_select_results"])
-    results=cur.fetchall()
+    #cur = db.execute(sqls()["sql_select_results"])
+    #results=cur.fetchall()
+    db.execute(sqls()["sql_select_results"])
+    results=db.fetchall()
     return render_template('bet_results.html', results=results, active_results='active', login=login )
 
 ####################################
@@ -116,27 +132,49 @@ def ranking_live():
 
     if request.method == 'GET':
         db = get_db()
-        cur = db.execute(sqls()["sql_select_live"], [login.id])
-        matches=cur.fetchall()
-
+        #cur = db.execute(sqls()["sql_select_live"], [login.id])
+        #matches=cur.fetchall()
+        db.execute(sqls()["sql_select_live"], [login.id])
+        matches=db.fetchall()
+        
         db = get_db()
-        cur = db.execute(sqls()["sql_select_ranking_live"])
-        ranking=cur.fetchall()
+        #cur = db.execute(sqls()["sql_select_ranking_live"])
+        #ranking=cur.fetchall()
+        db.execute(sqls()["sql_select_ranking_live"])
+        ranking=db.fetchall()
 
         return render_template('bet_ranking_live.html', matches=matches, active_ranking_live='active', login=login, ranking=ranking )
     else:
-        db = get_db()
-
         for key, value in request.form.items():
             match_id=key.split('_')[0]
             team=key.split('_')[1]
             if team=='team1':
-                sql_command = 'update matches_live set team1_res=?, insert_date=? where id=?'
-                db.execute(sql_command, [value, datetime.now(), match_id])
+                db = get_db()
+                #sql_command = 'update matches_live set team1_res=?, insert_date=? where id=?'
+                sql_command = """insert into matches_live
+                                select %s, m.match_date, m.match_group, m.team1, m.team2, %s, m.team2_res, m.points_multiplier  
+                                from v_user_matches_live uml inner join matches m on uml.match_id=m.id
+                                where substr(uml.match_date,1,10) = to_char(now(), 'DD-MM-YYYY') and uml.user_id=1 and m.id=%s
+                                on conflict(id)
+                                do update set
+                                team1_res=EXCLUDED.team1_res;"""
+                #db.execute(sql_command, [value, datetime.now(), match_id])
+                db.execute(sql_command, [match_id, int(value), match_id])
+                db = get_db2()
                 db.commit()
             elif team=='team2':
-                sql_command = 'update matches_live set team2_res=?, insert_date=? where id=?'
-                db.execute(sql_command, [value, datetime.now(), match_id])
+                db = get_db()
+                #sql_command = 'update matches_live set team2_res=?, insert_date=? where id=?'
+                sql_command = """insert into matches_live
+                                select %s, m.match_date, m.match_group, m.team1, m.team2, m.team1_res, %s, m.points_multiplier  
+                                from v_user_matches_live uml inner join matches m on uml.match_id=m.id
+                                where substr(uml.match_date,1,10) = to_char(now(), 'DD-MM-YYYY') and user_id=1 and m.id=%s
+                                on conflict(id)
+                                do update set
+                                team2_res=EXCLUDED.team2_res;"""
+                #db.execute(sql_command, [value, datetime.now(), match_id])
+                db.execute(sql_command, [match_id, int(value), match_id])
+                db = get_db2()
                 db.commit()
     
         flash('Live scores have been updated', 'success')
@@ -151,9 +189,10 @@ def edit_live():
         return redirect(url_for('routes.login')) 
     
     db = get_db()
-
-    cur = db.execute(sqls()["sql_select_live"],  [login.id])
-    matches=cur.fetchall()
+    #cur = db.execute(sqls()["sql_select_live"],  [login.id])
+    #matches=cur.fetchall()
+    db.execute(sqls()["sql_select_live"],  [login.id])
+    matches=db.fetchall()
     return render_template('bet_edit_live.html', matches=matches, active_matches='active', login=login )
 
 
@@ -201,14 +240,20 @@ def bonuses():
     
     if request.method == 'GET':
         db = get_db()
-        cur = db.execute(sqls()["sql_select_bonus_champion"], [login.id])
-        champion = cur.fetchone()
-        
-        cur = db.execute(sqls()["sql_select_bonus_topscorer"], [login.id])
-        topscorer = cur.fetchone()
+        #cur = db.execute(sqls()["sql_select_bonus_champion"], [login.id])
+        #champion = cur.fetchone()
+        db.execute(sqls()["sql_select_bonus_champion"], [login.id])
+        champion = db.fetchone()
 
-        cur = db.execute(sqls()["sql_select_user_bonuses"])
-        users_bonuses = cur.fetchall()
+        #cur = db.execute(sqls()["sql_select_bonus_topscorer"], [login.id])
+        #topscorer = cur.fetchone()
+        db.execute(sqls()["sql_select_bonus_topscorer"], [login.id])
+        topscorer = db.fetchone()
+
+        #cur = db.execute(sqls()["sql_select_user_bonuses"])
+        #users_bonuses = cur.fetchall()
+        db.execute(sqls()["sql_select_user_bonuses"])
+        users_bonuses = db.fetchall()
 
         #bonus_bet_enabled = 0
         if datetime.strptime(current_app.config["BONUS_DEADLINE"],'%d-%m-%Y %H:%M') > datetime.now() + timedelta(hours=current_app.config["TIME_ZONE_OFFSET"]):
@@ -221,13 +266,19 @@ def bonuses():
                                 bonus_deadline=current_app.config["BONUS_DEADLINE"],bonus_bet_enabled=bonus_bet_enabled)
     else:
         db = get_db()
-
-        sql_command = 'update user_bonuses set bonus_bet=? where bonus_id=1 and user_id=?'
+        #sql_command = 'update user_bonuses set bonus_bet=? where bonus_id=1 and user_id=?'
+        sql_command = 'update user_bonuses set bonus_bet=%s, insert_date=now() where bonus_id=1 and user_id=%s'
         db.execute(sql_command, [request.form['champion'], login.id])
+
+        db = get_db2()
         db.commit()
 
-        sql_command = 'update user_bonuses set bonus_bet=? where bonus_id=2 and user_id=?'
+        db = get_db()
+        #sql_command = 'update user_bonuses set bonus_bet=? where bonus_id=2 and user_id=?'
+        sql_command = 'update user_bonuses set bonus_bet=%s, insert_date=now() where bonus_id=2 and user_id=%s'
         db.execute(sql_command, [request.form['topscorer'], login.id])
+
+        db = get_db2()
         db.commit()
 
         flash('Your bets have been updated', 'success')
@@ -243,14 +294,20 @@ def edit_bonus():
     
     db = get_db()
 
-    cur = db.execute(sqls()["sql_select_teams"])
-    teams=cur.fetchall()
+    #cur = db.execute(sqls()["sql_select_teams"])
+    #teams=cur.fetchall()
+    db.execute(sqls()["sql_select_teams"])
+    teams=db.fetchall()
 
-    cur = db.execute(sqls()["sql_select_bonus_champion"], [login.id])
-    champion = cur.fetchone()
-        
-    cur = db.execute(sqls()["sql_select_bonus_topscorer"], [login.id])
-    topscorer = cur.fetchone()
+    #cur = db.execute(sqls()["sql_select_bonus_champion"], [login.id])
+    #champion = cur.fetchone()
+    db.execute(sqls()["sql_select_bonus_champion"], [login.id])
+    champion = db.fetchone()
+
+    #cur = db.execute(sqls()["sql_select_bonus_topscorer"], [login.id])
+    #topscorer = cur.fetchone()
+    db.execute(sqls()["sql_select_bonus_topscorer"], [login.id])
+    topscorer = db.fetchone()
 
     return render_template('bet_edit_bonuses.html', teams=teams, active_bonuses='active', login=login, champion=champion, topscorer=topscorer)
     # return render_template('index.html', teams=teams, active_bonuses='active', login=login, champion=champion, topscorer=topscorer)

@@ -7,9 +7,6 @@
 <div class="container">
   {% if matches %}
     <a href="{{ url_for('routes.edit_live') }}" class="btn btn-primary btn-lg" role="button">Edit Live Results</a>
-  {% else %}
-    <a href="{{ url_for('routes.edit_live') }}" class="btn btn-primary btn-lg disabled" role="button" aria-disabled="true">Edit Live Results</a>
-  {% endif %}
     <table class="table" style="width:1000px">
  
         <thead>
@@ -42,6 +39,10 @@
             {% endfor %}
         </tbody>
       </table>
+  {% else %}
+    <!-- <a href="{{ url_for('routes.edit_live') }}" class="btn btn-primary btn-lg disabled" role="button" aria-disabled="true">Edit Live Results</a> -->
+    <div class="fw-bold text-primary">no matches scheduled for today</div>
+  {% endif %}
 </div>
 <br>
 <br>

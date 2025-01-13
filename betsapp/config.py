@@ -7,6 +7,10 @@ class Config(object):
     BONUS_DEADLINE = '14-06-2024 20:55'
     TIME_ZONE_OFFSET = +2 #differences in hours between server datetime and match datetime 
                             #(tells how much hours do we need to add to the server time)
+    POSTGRES_HOST = "localhost"
+    POSTGRES_DATABASE = "postgres"
+    POSTGRES_USER = "postgres"
+    POSTGRES_PASSWORD = "mysecretpassword"
 
 class ProductionConfig(Config):
     pass
@@ -17,6 +21,7 @@ class TestingConfig(Config):
 class DevelopmentConfig(Config):
     BONUS_DEADLINE = '14-06-2025 20:55'
     DB_FILE = "bets_euro24.db"
+    POSTGRES_HOST = "postgres"
 
 def AzureKV(app):
     from azure.keyvault.secrets import SecretClient

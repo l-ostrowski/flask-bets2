@@ -260,8 +260,8 @@ update matches set team1_res=1, team2_res=2 where id=50;
 update matches set team1_res=2, team2_res=1 where id=51;
 
 
-update matches_live set points_multiplier=1
-update matches_live set points_multiplier=2 where id >= 37
+update matches_live set points_multiplier=1;
+update matches_live set points_multiplier=2 where id >= 37;
 update matches_live set points_multiplier=3 where id >= 49;
 update matches_live set points_multiplier=5 where id = 51;
 
@@ -269,75 +269,18 @@ update matches_live set points_multiplier=5 where id = 51;
 /*****************************
 USERS_MATCHES
 ******************************/
+/*zaladowanie meczow grupowych dla kazdego usera*/
 insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 1 as user_id, id, match_date, match_group, team1, team2 from matches;
+select u.id as user_id, m.id, m.match_date, m.match_group, m.team1, m.team2
+from matches m , users u
+where length(m.match_group)=1;
 
+/*zaladowanie brakujacych meczow dla kazdego usera*/
 insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 2 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 3 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 4 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 5 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 6 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 7 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 8 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 9 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 10 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 11 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 12 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 13 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 14 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select 15 as user_id, id, match_date, match_group, team1, team2 from matches;
-
-
-/*zaladowanie meczow 1/8 dla kazdego usera*/
-WITH RECURSIVE 
-  cnt(i) AS (VALUES(1) UNION ALL SELECT i+1 FROM cnt WHERE i < 15) 
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select cnt.i as user_id, id, match_date, match_group, team1, team2 
-from matches left join cnt 
-where id>36;
-
-/*zaladowanie meczow 1/4 dla kazdego usera*/
-WITH RECURSIVE 
-  cnt(i) AS (VALUES(1) UNION ALL SELECT i+1 FROM cnt WHERE i < 15) 
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select cnt.i as user_id, id, match_date, match_group, team1, team2 
-from matches left join cnt 
-where id>44;
-
-/*zaladowanie meczow 1/2 + FINAL dla kazdego usera*/
-WITH RECURSIVE 
-  cnt(i) AS (VALUES(1) UNION ALL SELECT i+1 FROM cnt WHERE i < 15) 
-insert into user_matches (user_id, match_id, match_date, match_group, team1, team2)
-select cnt.i as user_id, id, match_date, match_group, team1, team2 
-from matches left join cnt 
-where id>=49;
+select u.id as user_id, m.id, m.match_date, m.match_group, m.team1, m.team2
+from matches m , users u
+EXCEPT
+select user_id, match_id, match_date, match_group, team1, team2 from user_matches;
 
 
 /*****************************
@@ -346,13 +289,11 @@ BONUSES & USER_BONUSES
 insert into bonuses (id, name, points) values (1, 'Champion', 20);
 insert into bonuses (id, name, points) values (2, 'Topscorer', 20);
 
-WITH RECURSIVE 
-  cnt(i) AS (VALUES(1) UNION ALL SELECT i+1 FROM cnt WHERE i < 15) 
 insert into user_bonuses (user_id, bonus_id)
-select cnt.i as user_id, id 
-from bonuses left join cnt 
+select u.id as user_id, b.id 
+from bonuses b, users u; 
 
-update bonuses set result = 'Spain' where id = 1
-update bonuses set result = 'Dani Olmo, Harry Kane, Cody Gakpo, Georges Mikautadze, Jamal Musiala, Ivan Schranz' where id = 2
+update bonuses set result = 'Spain' where id = 1;
+update bonuses set result = 'Dani Olmo, Harry Kane, Cody Gakpo, Georges Mikautadze, Jamal Musiala, Ivan Schranz' where id = 2;
 
 
