@@ -15,6 +15,7 @@ def create_app():
     #app.config.from_object("betsapp.config.DevelopmentConfig")
     app.config.from_object(config_file)
     print("db file: " + app.config['DB_FILE'])
+    print("db engine: " + app.config['DB_ENGINE'])
 
     database.init_app(app)
     # print(database.test(app))

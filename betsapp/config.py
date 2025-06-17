@@ -19,7 +19,7 @@ class TestingConfig(Config):
     pass
 
 class DevelopmentConfig(Config):
-    BONUS_DEADLINE = '14-06-2025 20:55'
+    BONUS_DEADLINE = '20-06-2025 20:55'
     DB_FILE = "bets_euro24.db"
     POSTGRES_HOST = "postgres"
 
